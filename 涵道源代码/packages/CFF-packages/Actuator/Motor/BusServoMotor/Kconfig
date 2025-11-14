@@ -1,0 +1,10 @@
+
+# Kconfig file for package BusServo
+menuconfig PKG_USING_CFF_BUS_SERVO
+    bool "创非凡® 总线舵机"
+    select BSP_USING_UART
+    select PKG_USING_ALGORITHM_LIBRARY
+    select PKG_USING_CFF_SERIAL_BUS
+    default n
+
+

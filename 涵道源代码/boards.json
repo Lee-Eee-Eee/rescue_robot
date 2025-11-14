@@ -1,0 +1,7 @@
+{
+    "MFMaster1": {
+        "chip": "stm32",
+        "type": "STM32F407VET6",
+        "description": "Competition kit."
+    }
+}

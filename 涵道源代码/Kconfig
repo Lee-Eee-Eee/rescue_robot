@@ -1,0 +1,19 @@
+mainmenu "RT-Thread Configuration"
+
+BSP_DIR := .
+
+RTT_DIR := rt-thread
+
+PKGS_DIR := packages
+
+menu "RT-Thread"
+osource "$RTT_DIR/Kconfig"
+endmenu
+
+source "../libraries/Kconfig"
+if !RT_USING_NANO
+source "board/Kconfig"
+endif
+osource "$PKGS_DIR/Kconfig"
+orsource "./packages/Kconfig"
+orsource "./applications/Kconfig"

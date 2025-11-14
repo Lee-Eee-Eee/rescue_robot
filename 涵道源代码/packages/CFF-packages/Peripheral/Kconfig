@@ -1,0 +1,4 @@
+orsource "./st77xx/Kconfig"
+orsource "./TeenyUSB/Kconfig"
+orsource "./bmi08x/Kconfig"
+orsource "./TonePlayer/Kconfig"

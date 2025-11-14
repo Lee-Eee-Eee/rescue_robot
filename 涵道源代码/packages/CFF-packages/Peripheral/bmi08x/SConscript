@@ -1,0 +1,18 @@
+# RT-Thread building script for bridge
+
+from building import *
+Import('rtconfig')
+
+src   = []
+cwd   = GetCurrentDir()
+
+# add bmi088 src files.
+src     = Glob('src/*.c')
+
+# add bmi088 include path.
+path    = [cwd + '/inc']
+
+# add src and include to group.
+group = DefineGroup('CFF/bmi088', src, depend = ['PKG_USING_CFF_BMI08x'], CPPPATH = path)
+
+Return('group')

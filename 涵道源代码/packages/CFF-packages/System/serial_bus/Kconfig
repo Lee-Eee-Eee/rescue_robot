@@ -1,0 +1,12 @@
+
+# Kconfig file for package serial_bus
+
+menuconfig PKG_USING_CFF_SERIAL_BUS
+    bool "serial bus driver package."
+    select RT_USING_SERIAL
+    select RT_USING_PIN
+    default n
+
+if PKG_USING_CFF_SERIAL_BUS
+
+endif

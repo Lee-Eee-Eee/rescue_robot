@@ -1,0 +1,34 @@
+from building import *
+import rtconfig
+
+cwd     = GetCurrentDir()
+src     = Glob('src/*.c') + Glob('src/*.cpp')
+path    = [cwd + '/include']
+
+LOCAL_CCFLAGS = ''
+
+if GetDepend('ALGORITHM_USING_CHASSIS_KINEMATICS'):
+    src    += Glob('Chassis/chassis_kinematics.cpp')
+    path += [cwd + '/Chassis']
+
+if GetDepend('ALGORITHM_USING_PID'):
+    if GetDepend('RT_USING_CPLUSPLUS'):
+        src    += Glob('PID/cpp/pid.cpp')
+        path += [cwd + '/PID/cpp']
+    else:
+        src    += Glob('PID/c/pid.c')
+        path += [cwd + '/PID/c']
+
+if GetDepend('ALGORITHM_USING_AHRS'):
+    path += [cwd + '/AHRS']
+    if GetDepend('ALGORITHM_USING_AHRS_MADGWICK'):
+        src    += Glob('AHRS/AHRS_Madgwick.cpp')
+    if GetDepend('ALGORITHM_USING_AHRS_MAHONY'):
+        src    += Glob('AHRS/AHRS_Mahony.cpp')
+
+if rtconfig.CROSS_TOOL == 'gcc':
+    LOCAL_CCFLAGS += ' -std=c99'
+
+group = DefineGroup('CFF/Lib', src, depend = ['PKG_USING_CFF_ALGORITHM_LIBRARY'], CPPPATH = path, LOCAL_CCFLAGS = LOCAL_CCFLAGS)
+
+Return('group')

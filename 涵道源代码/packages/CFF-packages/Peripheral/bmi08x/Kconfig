@@ -1,0 +1,12 @@
+# Kconfig file for package bmi08x
+menuconfig PKG_USING_CFF_BMI08x
+    bool "Sensor Driver for BMI08x family of sensors."
+    select RT_USING_SENSOR
+    select RT_USING_SENSOR_V2
+    default n
+
+if PKG_USING_CFF_BMI08x
+
+	
+endif
+

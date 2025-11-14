@@ -1,0 +1,79 @@
+menuconfig PKG_USING_CFF_TINYFRAME
+    bool "CFF TinyFrame: Serial communication protocol."
+    default n
+
+if PKG_USING_CFF_TINYFRAME
+    config TINYFRAME_CONFIG_ID_BYTES
+        int "ID bytes"
+        default 1
+
+    config TINYFRAME_CONFIG_LEN_BYTES
+        int "Len bytes"
+        default 1
+
+    config TINYFRAME_CONFIG_TYPE_BYTES
+        int "Type bytes"
+        default 1
+
+    choice
+        prompt "Checksum type"
+        default TINYFRAME_CONFIG_CKSUM_CRC16
+
+        config TINYFRAME_CONFIG_CKSUM_NONE
+            bool "None"
+        config TINYFRAME_CONFIG_CKSUM_XOR
+            bool "XOR"
+        config TINYFRAME_CONFIG_CKSUM_CRC8
+            bool "CRC8"
+        config TINYFRAME_CONFIG_CKSUM_CRC16
+            bool "CRC16"
+        config TINYFRAME_CONFIG_CKSUM_CRC32
+            bool "CRC32"
+        config TINYFRAME_CONFIG_CKSUM_CUSTOM8
+            bool "Custom 8"
+        config TINYFRAME_CONFIG_CKSUM_CUSTOM16
+            bool "v1.0.0"
+        config TINYFRAME_CONFIG_CKSUM_CUSTOM32
+            bool "v1.0.0"
+    endchoice
+
+    config TINYFRAME_CONFIG_USE_SOF
+        bool "Use a SOF byte"
+        default y
+
+    if TINYFRAME_CONFIG_USE_SOF
+        config TINYFRAME_CONFIG_SOF_BYTE
+            hex "Value of the SOF byte"
+            default 0x55
+    endif
+
+    config TINYFRAME_CONFIG_MAX_PAYLOAD_RX
+        int "Maximum received size"
+        default 128
+        range 1 255 if TINYFRAME_CONFIG_LEN_BYTES = 1
+        range 1 65535 if TINYFRAME_CONFIG_LEN_BYTES = 2
+
+    config TINYFRAME_CONFIG_SENDBUF_LEN
+        int "Size of the sending buffer"
+        default 128
+
+    config TINYFRAME_CONFIG_MAX_ID_LST
+        int "Frame ID listeners"
+        default 10
+
+    config TINYFRAME_CONFIG_MAX_TYPE_LST
+        int "Frame Type listeners"
+        default 10
+
+    config TINYFRAME_CONFIG_MAX_GEN_LST
+        int "Generic listeners"
+        default 5
+
+    config TINYFRAME_CONFIG_PARSER_TIMEOUT_TICKS
+        int "Timeout for receiving & parsing a frame"
+        default 10
+
+    config TINYFRAME_CONFIG_USE_MUTEX
+        bool "Whether to use mutex"
+        default n
+endif

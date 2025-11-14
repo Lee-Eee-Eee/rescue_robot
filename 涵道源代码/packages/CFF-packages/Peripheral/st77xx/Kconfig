@@ -1,0 +1,97 @@
+menuconfig PKG_USING_CFF_LCD
+    bool "LCD drivers"
+    depends on BSP_USING_SPI && BSP_USING_GPIO
+    default n
+
+if PKG_USING_CFF_LCD
+
+    choice
+        prompt "LCD Drive"
+        default CONFIG_LCD_DRIVE_ST7735
+
+        config CONFIG_LCD_DRIVE_ST7735
+            bool "ST7735 Drive"
+
+        config CONFIG_LCD_DRIVE_ST7789
+            bool "ST7789 Drive"
+
+    endchoice
+
+    config CONFIG_LCD_SPI_BUS_NAME
+        string "LCD use the SPI bus"
+        default "spi1"
+
+    config CONFIG_LCD_MOUNT_SPI_DEVICE_NAME
+        string "LCD mount the spi device name"
+        default "spilcd"
+
+    #config CONFIG_LCD_SPI_CS_PIN
+    #    int "LCD chipselect(NSS/CS) pin number"
+    #    default 35
+
+    #config CONFIG_LCD_DC_PIN
+    #    int "LCD DC(RS) pin number"
+    #    default 36
+    
+    #menuconfig CONFIG_LCD_USING_RESET_PIN
+    #    bool "Enable lcd reset pin"
+    #    default n
+    #    if CONFIG_LCD_USING_RESET_PIN
+    #        config CONFIG_LCD_RESET_PIN
+    #            int "LCD reset pin number"
+    #            default 37
+    #    endif
+
+    #menuconfig CONFIG_LCD_USING_BL_PIN
+    #    bool "Enable lcd backlight pin"
+    #    default n
+    #    if CONFIG_LCD_USING_BL_PIN
+    #        config CONFIG_LCD_BL_PIN
+    #            int "LCD backlight pin number"
+    #            default 38
+    #    endif
+
+    choice
+        prompt "LCD display orientation"
+        default CONFIG_LCD_VERTICAL
+
+        config CONFIG_LCD_VERTICAL
+            bool "Vertical"
+        config CONFIG_LCD_VERTICAL_INVERTED
+            bool "Vertical inverted"
+        config CONFIG_LCD_HORIZONTAL
+            bool "Horizontal"
+        config CONFIG_LCD_HORIZONTAL_INVERTED
+            bool "Horizontal inverted"
+    endchoice
+
+    config CONFIG_LCD_DISPLAY_ORIENTATION
+        int
+        default 0 if CONFIG_LCD_VERTICAL
+        default 1 if CONFIG_LCD_VERTICAL_INVERTED
+        default 2 if CONFIG_LCD_HORIZONTAL
+        default 3 if CONFIG_LCD_HORIZONTAL_INVERTED
+        default 0
+
+    menu "LCD Font"
+        config CONFIG_LCD_FONT_ASC2_1608
+            bool "ASC2_1608"
+            default y
+
+        config CONFIG_LCD_FONT_ASC2_2412
+            bool "ASC2_2412"
+            default n
+
+        config CONFIG_LCD_FONT_ASC2_3216
+            bool "ASC2_3216"
+            default n
+
+        config CONFIG_LCD_FONT_ASC2_4824
+            bool "ASC2_4824"
+            default n
+
+        config CONFIG_LCD_FONT_ASC2_6432
+            bool "ASC2_6432"
+            default n
+    endmenu
+endif

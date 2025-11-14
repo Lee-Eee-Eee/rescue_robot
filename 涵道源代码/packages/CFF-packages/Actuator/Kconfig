@@ -1,0 +1,2 @@
+orsource "./CAN_Communication/Kconfig"
+orsource "./Motor/Kconfig"

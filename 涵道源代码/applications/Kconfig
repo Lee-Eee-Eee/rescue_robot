@@ -1,0 +1,7 @@
+
+choice
+prompt "XRobot Applications"
+
+rsource "./rescue_robot/Kconfig"
+
+endchoice

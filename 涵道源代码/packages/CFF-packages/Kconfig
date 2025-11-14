@@ -1,0 +1,19 @@
+menu "CFF packages"
+
+    menu "System"
+        rsource "./System/Kconfig"
+    endmenu
+
+    menu "LIB"
+        rsource "./Lib/Kconfig"
+    endmenu
+
+    menu "Peripheral"
+        rsource "./Peripheral/Kconfig"
+    endmenu
+
+    menu "Actuator"
+        rsource "./Actuator/Kconfig"
+    endmenu
+
+endmenu

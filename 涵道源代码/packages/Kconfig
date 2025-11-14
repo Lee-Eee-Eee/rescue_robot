@@ -1,0 +1,6 @@
+menu "Custom function supplement package"
+
+# 创非凡功能包
+orsource "./CFF-packages/Kconfig"
+
+endmenu

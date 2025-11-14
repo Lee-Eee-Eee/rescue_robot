@@ -1,0 +1,91 @@
+# Kconfig file for package TeenyUSB
+menuconfig PKG_USING_CFF_TEENYUSB
+    bool "TeenyUSB: A teeny USB device and host stack for MCUs, support super speed device."
+    default n
+    select RT_USING_USB
+    select RT_USING_EVENT
+    select RT_USING_MESSAGEQUEUE
+
+if PKG_USING_CFF_TEENYUSB
+
+    choice
+        prompt "USB OTG (FS/HS) Core"
+        default TEENYUSB_OTG_FS
+
+        config TEENYUSB_OTG_FS
+            bool "USB Full Speed (FS) Core"
+
+        config TEENYUSB_OTG_HS
+            bool "USB High Speed (HS) Core"
+    endchoice
+
+    choice
+        prompt "Port speed"
+        default TEENYUSB_FULL_SPEED
+
+        config TEENYUSB_FULL_SPEED
+            bool "Full Speed"
+
+        config TEENYUSB_HIGH_SPEED
+            depends on TEENYUSB_HS
+            bool "High Speed"
+    endchoice
+
+    menuconfig TEENYUSB_HOST_ENABLE
+        bool "Using USB host"
+        default n
+
+    if TEENYUSB_HOST_ENABLE
+        config TEENYUSB_USBH_HUB
+            bool "support multiple device and hub"
+            default n
+
+        config TEENYUSB_USBH_HID
+            bool "Human interface device (HID)"
+            default n
+
+        config TEENYUSB_USBH_MSC
+            bool "Mass storage class with BOT protocol (MSC)"
+            default n
+
+        #config TEENYUSB_USBH_CDC_ACM
+        #    bool "Communication device class, abstract control mode (ACM)"
+        #    default n
+
+        #config TEENYUSB_USBH_CDC_RNDIS
+        #    bool "Communication device class, remote NDIS (RNDIS)"
+        #    default n
+
+        #config TEENYUSB_USBH_VENDOR
+        #    bool "Vendor class"
+        #    default n
+    endif
+
+    menuconfig TEENYUSB_DEVICE_ENABLE
+        bool "Using USB device"
+        default n
+
+    if TINYUSB_DEVICE_ENABLE
+
+    endif
+
+    config TEENYUSB_DESCRIPTOR_BUFFER_SIZE
+        int "descriptor buffer, some device require data in RAM"
+        default 256
+
+    choice
+        prompt "TeenyUSB debug info level"
+        default TEENYUSB_DBG_DEBUG
+
+        config TEENYUSB_DBG_DEBUG
+            bool "Debug"
+        config TEENYUSB_DBG_WARNING
+            bool "Warning"
+        config TEENYUSB_DBG_ERROR
+            bool "Error"
+        config TEENYUSB_DBG_NONE
+            bool "None"
+    endchoice
+
+
+endif

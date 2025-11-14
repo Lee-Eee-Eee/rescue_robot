@@ -1,0 +1,12 @@
+from building import *
+import rtconfig
+
+# get current directory
+cwd     = GetCurrentDir()
+# The set of source files associated with this SConscript file.
+src     = Glob('src/*.cpp')
+path    = [cwd + '/inc']
+
+group = DefineGroup('CFF/BusServo', src, depend = ['PKG_USING_CFF_BUS_SERVO'], CPPPATH = path)
+
+Return('group')

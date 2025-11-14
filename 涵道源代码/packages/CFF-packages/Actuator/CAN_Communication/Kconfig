@@ -1,0 +1,54 @@
+
+# Kconfig file for package CAN_Communication
+menuconfig PKG_USING_CFF_CAN_COMMUNICATION
+    bool "创非凡® CAN 通信协议层"
+    select BSP_USING_CAN
+    default n
+
+if PKG_USING_CFF_CAN_COMMUNICATION
+
+    config CFFCAN_DC_MOTOR_MINIWATT
+        bool "DC Motor"
+        default n
+        if CFFCAN_DC_MOTOR_MINIWATT
+            choice
+                prompt "Quadrature Encoded Pulses or Input capture"
+                default QEP_DC_MOTOR
+                config QEP_DC_MOTOR
+                    bool "Quadrature Encoded Pulses"
+                config INPUT_CAPTURE_MOTOR
+                    bool "Input capture"
+            endchoice
+        endif
+
+    config CFFCAN_STEERING_ENGINE_6CH
+        bool "6通道舵机模块"
+        default n
+
+    config CFFCAN_STEERING_ENGINE_3CH
+        bool "3通道总线舵机模块"
+        default n
+
+    config CFFCAN_STEERING_MOTOR
+        bool "步进电机模块"
+        default n
+
+
+    config CFFCAN_EXPANSION_BOARD_INPUT
+        bool "输入拓展模块"
+        default n
+
+    config CFFCAN_EXPANSION_BOARD_OUT
+        bool "输出拓展模块"
+        default n
+
+    config CFFCAN_TRACKING_SENSOR
+        bool "巡线模块"
+        default n
+
+    config CFFCAN_ULTRASONIC_RANGING_SENSOR
+        bool "超声波测距模块"
+        default n
+        
+endif
+

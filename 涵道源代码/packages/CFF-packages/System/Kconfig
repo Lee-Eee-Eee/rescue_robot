@@ -1,0 +1,3 @@
+rsource "./utils/Kconfig"
+orsource "./serial_bus/Kconfig"
+orsource "./TinyFrame/Kconfig"

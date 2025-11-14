@@ -1,0 +1,13 @@
+menuconfig EXT_USING_TM16XX_LIBRARY
+    bool "TM16xx LEDs and Buttons library"
+    depends on BSP_USING_GPIO
+    select RT_USING_CPLUSPLUS
+    default n
+
+if EXT_USING_TM16XX_LIBRARY
+    
+    config TM16XX_USING_TM1652_DRIVER
+        bool "TM1652"
+        default n
+
+endif

@@ -1,0 +1,9 @@
+menuconfig PKG_USING_CFF_TONE_PLAYER
+    bool "Buzzer music player"
+    select RT_USING_CPLUSPLUS
+    default n
+
+if PKG_USING_CFF_TONE_PLAYER
+
+
+endif

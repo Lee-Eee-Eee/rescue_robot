@@ -1,0 +1,13 @@
+from building import *
+import rtconfig
+
+# get current directory
+cwd     = GetCurrentDir()
+# The set of source files associated with this SConscript file.
+src     = Glob('src/*.cpp')
+
+path    = [cwd + '/include']
+
+group = DefineGroup('CFF/TonePlayer', src, depend = ['PKG_USING_CFF_TONE_PLAYER'], CPPPATH = path)
+
+Return('group')

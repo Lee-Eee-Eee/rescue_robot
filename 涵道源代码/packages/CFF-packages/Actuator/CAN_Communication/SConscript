@@ -1,0 +1,36 @@
+from building import *
+
+cwd     = GetCurrentDir()
+
+# The set of source files associated with this SConscript file.
+src = Glob('*.c')
+
+path = [cwd, cwd + '/SlaveControlPanel']
+
+if GetDepend(['CFFCAN_DC_MOTOR_MINIWATT']):
+    src += [cwd + '/SlaveControlPanel/SLAVE_DCMotorMiniwatt/SLAVE_DCMotorMiniwatt.c']
+
+if GetDepend(['CFFCAN_STEERING_ENGINE_6CH']):
+    src += [cwd + '/SlaveControlPanel/SLAVE_SteeringEngine_6CH/SLAVE_SteeringEngine_6CH.c']
+
+if GetDepend(['CFFCAN_STEERING_ENGINE_3CH']):
+    src += [cwd + '/SlaveControlPanel/SLAVE_SteeringEngine_3CH/SLAVE_SteeringEngine_3CH.c']
+
+if GetDepend(['CFFCAN_STEERING_MOTOR']):
+    src += [cwd + '/SlaveControlPanel/SLAVE_SteppingMotor/SLAVE_SteppingMotor.c']
+
+if GetDepend(['CFFCAN_EXPANSION_BOARD_INPUT']):
+    src += [cwd + '/SlaveControlPanel/SLAVE_ExpansionBoardInput/SLAVE_ExpansionBoardInput.c']
+
+    
+if GetDepend(['CFFCAN_EXPANSION_BOARD_OUT']):
+    src += [cwd + '/SlaveControlPanel/SLAVE_ExpansionBoardInput/SLAVE_ExpansionBoardInput.c']
+
+if GetDepend(['CFFCAN_TRACKING_SENSOR']):
+    src += [cwd + '/SlaveControlPanel/SLAVE_Tracking/SLAVE_Tracking.c']
+
+if GetDepend(['CFFCAN_ULTRASONIC_RANGING_SENSOR']):
+    src += [cwd + '/SlaveControlPanel/SLAVE_UltrasonicRanging/SLAVE_UltrasonicRanging.c']
+
+group = DefineGroup('CFF/CAN_Communication', src, depend = ['PKG_USING_CFF_CAN_COMMUNICATION'], CPPPATH = path)
+Return('group')

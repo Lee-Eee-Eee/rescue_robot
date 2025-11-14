@@ -1,0 +1,3 @@
+menuconfig PKG_USING_CFF_UTILS
+    bool "CFF utils"
+    default y

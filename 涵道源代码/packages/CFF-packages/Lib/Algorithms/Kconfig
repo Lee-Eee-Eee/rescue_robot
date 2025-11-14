@@ -1,0 +1,30 @@
+menuconfig PKG_USING_CFF_ALGORITHM_LIBRARY
+    bool "CFF Algorithms library"
+    select RT_USING_CPLUSPLUS
+    default y
+
+if PKG_USING_CFF_ALGORITHM_LIBRARY
+
+    config ALGORITHM_USING_CHASSIS_KINEMATICS
+        bool "Chassis Kinematics library"
+        default n
+
+    config ALGORITHM_USING_PID
+        bool "PID Controller library"
+        default n
+
+    config ALGORITHM_USING_AHRS
+        bool "AHRS library"
+        default n
+        if ALGORITHM_USING_AHRS
+                config ALGORITHM_USING_AHRS_MADGWICK
+                    bool "Madgwick's IMU and AHRS algorithms."
+                    default n
+
+                config ALGORITHM_USING_AHRS_MAHONY
+                    bool "Mayhony's AHRS algorithm."
+                    default n
+
+            endif
+
+endif

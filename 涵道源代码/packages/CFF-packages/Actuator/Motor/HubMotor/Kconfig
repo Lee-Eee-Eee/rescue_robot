@@ -1,0 +1,8 @@
+
+# Kconfig file for package hub_motor
+menuconfig PKG_USING_CFF_HUB_MOTOR
+    bool "创非凡® 轮毂电机"
+    select BSP_USING_UART
+    select PKG_USING_CFF_SERIAL_BUS
+    default n
+

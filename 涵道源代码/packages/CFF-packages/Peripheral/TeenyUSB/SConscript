@@ -1,0 +1,72 @@
+import rtconfig
+from building import *
+
+cwd     = GetCurrentDir()
+
+path = []
+path += [cwd+'/core', 
+         cwd+'/osal/rtthread']
+
+src = [cwd+'/osal/rtthread/teeny_usb_os.c',
+       cwd+'/core/teeny_usb.c']
+
+if GetDepend(["TEENYUSB_HOST_ENABLE"]):
+    path += [cwd+'/class']
+    src += [cwd+'/class/tusbh.c']
+    
+    if GetDepend(["TEENYUSB_USBH_HUB"]):
+        path += [cwd+'/class/hub']
+        src += [cwd+'/class/hub/tusbh_hub.c']
+    
+    if GetDepend(["TEENYUSB_USBH_HID"]):
+        path += [cwd+'/class/hid']
+        src += [cwd+'/class/hid/tusbh_hid.c']
+
+    if GetDepend(["TEENYUSB_USBH_MSC"]):
+        path += [cwd+'/class/msc']
+        src += [cwd+'/class/msc/tusbh_msc.c']
+
+    if GetDepend(["TEENYUSB_USBH_VENDOR"]):
+        path += [cwd+'/class/vendor']
+        src += [cwd+'/class/vendor/tusbh_vendor.c']
+
+if GetDepend(["TEENYUSB_DEVICE_ENABLE"]):
+    path += [cwd+'/class']
+    src += [cwd+'/class/tusbd.c']
+    
+if GetDepend(["SOC_FAMILY_STM32"]):
+    path += [cwd + "/driver_stm32"]
+
+    if GetDepend(["SOC_SERIES_STM32F1"]):
+        if GetDepend(["SOC_STM32F105R8"]):
+            src += [cwd+'/driver_stm32/stm32_otg_init.c']
+            if GetDepend(["TEENYUSB_HOST_ENABLE"]):
+                src += [cwd+'/driver_stm32/teeny_usb_stm32_otg_host.c']
+        
+            elif GetDepend(["TEENYUSB_DEVICE_ENABLE"]):
+                src += [cwd+'/driver_stm32/teeny_usb_stm32_otg_device.c']
+        else:          
+            src += [cwd+'/driver_stm32/stm32_fs_init.c',
+                    cwd+'/driver_stm32/teeny_usb_stm32_fs_device.c']
+        
+    elif GetDepend(["SOC_SERIES_STM32F4"]):
+        src += [cwd+'/driver_stm32/stm32_otg_init.c']
+
+        if GetDepend(["TEENYUSB_HOST_ENABLE"]):
+            src += [cwd+'/driver_stm32/teeny_usb_stm32_otg_host.c']
+        
+        elif GetDepend(["TEENYUSB_DEVICE_ENABLE"]):
+            src += [cwd+'/driver_stm32/teeny_usb_stm32_otg_device.c']
+    
+CXXFLAGS = ''
+LOCAL_CFLAGS = ''
+
+if rtconfig.PLATFORM == 'gcc' or rtconfig.PLATFORM == 'armclang': # GCC or Keil AC6
+    LOCAL_CFLAGS += ' -std=c99'
+elif rtconfig.PLATFORM == 'armcc': # Keil AC5
+    CXXFLAGS = ' --gnu' # enable global GNU extension support for the whole project
+    LOCAL_CFLAGS += ' --c99 --gnu'
+    
+group = DefineGroup('CFF/TeenyUSB', src, depend = ['PKG_USING_CFF_TEENYUSB'], CPPPATH = path, LOCAL_CFLAGS = LOCAL_CFLAGS, CXXFLAGS = CXXFLAGS)
+
+Return('group')
