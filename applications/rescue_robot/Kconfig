@@ -1,0 +1,9 @@
+config APP_RESCUE_ROBOT
+    bool "救援机器人"
+    default n
+    select PKG_USING_CFF_ALGORITHM_LIBRARY
+    select ALGORITHM_USING_CHASSIS_SOLVE
+
+if APP_RESCUE_ROBOT
+
+endif
