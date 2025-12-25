@@ -10,6 +10,117 @@ namespace auto_ctrl
 // 角度与弧度转换宏
 #define DEGREE_TO_RADIAN(degree) ((degree) * M_PI / 180.0)
 #define RADIAN_TO_DEGREE(radian) ((radian) * 180.0 / M_PI)
+
+// 视觉识别标签（与摄像头端 labels 数组下标一致）
+// labels:
+// 0 "yellow triangular pyramid"
+// 1 "white cylinder"
+// 2 "blue ball"
+// 3 "yellow cuboid"
+// 4 "blue departure area"
+// 5 "blue safety zone"
+// 6 "red ball"
+// 7 "blue circular cone"
+// 8 "black ball"
+// 9 "white cube"
+// 10 "red safety zone"
+// 11 "red departure area"
+// 12 "yellow ball"
+constexpr uint8_t LABEL_YELLOW_TRIANGULAR_PYRAMID = 0;
+constexpr uint8_t LABEL_WHITE_CYLINDER = 1;
+constexpr uint8_t LABEL_BLUE_BALL = 2;
+constexpr uint8_t LABEL_YELLOW_CUBOID = 3;
+constexpr uint8_t LABEL_BLUE_DEPARTURE_AREA = 4;
+constexpr uint8_t LABEL_BLUE_SAFETY_ZONE = 5;
+constexpr uint8_t LABEL_RED_BALL = 6;
+constexpr uint8_t LABEL_BLUE_CIRCULAR_CONE = 7;
+constexpr uint8_t LABEL_BLACK_BALL = 8;
+constexpr uint8_t LABEL_WHITE_CUBE = 9;
+constexpr uint8_t LABEL_RED_SAFETY_ZONE = 10;
+constexpr uint8_t LABEL_RED_DEPARTURE_AREA = 11;
+constexpr uint8_t LABEL_YELLOW_BALL = 12;
+
+enum class ObjColorGroup : uint8_t
+{
+	Unknown = 0,
+	Red,
+	Blue,
+	Yellow,
+	White,
+	Black,
+};
+
+static inline bool IsSafetyZoneType(uint8_t type)
+{
+	return type == LABEL_BLUE_SAFETY_ZONE || type == LABEL_RED_SAFETY_ZONE;
+}
+
+static inline bool IsDepartureAreaType(uint8_t type)
+{
+	return type == LABEL_BLUE_DEPARTURE_AREA || type == LABEL_RED_DEPARTURE_AREA;
+}
+
+static inline bool IsRescueObjectType(uint8_t type)
+{
+	return !IsSafetyZoneType(type) && !IsDepartureAreaType(type);
+}
+
+static inline ObjColorGroup GetColorGroup(uint8_t type)
+{
+	switch (type)
+	{
+	case LABEL_BLUE_BALL:
+	case LABEL_BLUE_CIRCULAR_CONE:
+		return ObjColorGroup::Blue;
+	case LABEL_RED_BALL:
+		return ObjColorGroup::Red;
+	case LABEL_BLACK_BALL:
+		return ObjColorGroup::Black;
+	case LABEL_YELLOW_TRIANGULAR_PYRAMID:
+	case LABEL_YELLOW_CUBOID:
+	case LABEL_YELLOW_BALL:
+		return ObjColorGroup::Yellow;
+	case LABEL_WHITE_CYLINDER:
+	case LABEL_WHITE_CUBE:
+		return ObjColorGroup::White;
+	default:
+		return ObjColorGroup::Unknown;
+	}
+}
+
+static inline bool MatchTarget(uint8_t requestedType, uint8_t detectedType)
+{
+	if (IsSafetyZoneType(requestedType) || IsDepartureAreaType(requestedType))
+	{
+		return detectedType == requestedType;
+	}
+	if (!IsRescueObjectType(detectedType))
+	{
+		return false;
+	}
+	const auto requestedGroup = GetColorGroup(requestedType);
+	const auto detectedGroup = GetColorGroup(detectedType);
+	if (requestedGroup == ObjColorGroup::Unknown || detectedGroup == ObjColorGroup::Unknown)
+	{
+		return detectedType == requestedType;
+	}
+	return detectedGroup == requestedGroup;
+}
+
+static inline bool IsExcludedInNonOpponentMode(uint8_t excludedType, uint8_t detectedType)
+{
+	if (!IsRescueObjectType(detectedType))
+	{
+		return true;
+	}
+	const auto excludedGroup = GetColorGroup(excludedType);
+	const auto detectedGroup = GetColorGroup(detectedType);
+	if (excludedGroup == ObjColorGroup::Unknown || detectedGroup == ObjColorGroup::Unknown)
+	{
+		return detectedType == excludedType;
+	}
+	return detectedGroup == excludedGroup;
+}
 static rt_thread_t auto_thread = RT_NULL; // 定义自动控制线程句柄，初始为NULL
 static Robot_t *robot_ = NULL; // 定义机器人指针，初始为NULL
 struct position *current; // 定义当前位置结构体指针
@@ -317,23 +428,28 @@ int certain_ball(Robot_t *robot, uint8_t color , uint8_t pd)
         {
 					delay(1);//延时1ms
           ball_tmp = visual::getBall(i);// 获取视觉下发数据
-					if(pd == 1){// 判断是color颜色还是除color颜色以外（1不是color颜色）
-            if (color != ball_tmp->type && ball_tmp->type !=1 && ball_tmp->type != 3)// 判断视觉数据和color是否不同，且不等于1和2
-            {
-                dt = (millis() - ball_tmp->timestamp);// 计算现在时间与数据获取时间的插值
-                if(dt < 100)// 判断dt是否小于100ms
-                {
-									return 1;// 返回 1
-								}
+					dt = (millis() - ball_tmp->timestamp);// 计算现在时间与数据获取时间的插值
+					if (dt >= 100)
+					{
+						continue;
 					}
-						if (color == ball_tmp->type && ball_tmp->type !=1 && ball_tmp->type != 3)// 判断视觉数据和color是否相同，且不等于1和2
-            {
-                dt = (millis() - ball_tmp->timestamp);// 计算现在时间与数据获取时间的插值
-                if(dt < 100)// 判断dt是否小于100ms
-                {
-									return 2;// 返回 2
-								}
+					if (!IsRescueObjectType(ball_tmp->type))
+					{
+						continue;
 					}
+					const auto wantGroup = GetColorGroup(color);
+					const auto gotGroup = GetColorGroup(ball_tmp->type);
+					if (pd == 1)// 1除了此颜色其他颜色（这里用于判断是否为对方颜色）
+					{
+						if (wantGroup != ObjColorGroup::Unknown && gotGroup == wantGroup)
+						{
+							return 2;// 颜色一致（对方颜色）
+						}
+						return 1;// 颜色不一致（非对方颜色）
+					}
+					if (wantGroup != ObjColorGroup::Unknown && gotGroup == wantGroup)
+					{
+						return 2;// 颜色一致
 					}
 				}
 			delay(10);// 延时10ms
@@ -375,9 +491,9 @@ bool certain_home(Robot_t *robot, uint8_t color , uint8_t pd){
                dt = (millis() - ball_tmp->timestamp);// 计算现在时间与数据获取时间的插值
                if(dt < 100)// 判断是否小与100ms（最新消息）
                {
-								 // 定义一个x的向量差值xx
+								// 定义一个x的向量差值xx
 								int16_t xx;
-								if (color == 1 || color == 3){// 判断color是否为安全区
+								if (IsSafetyZoneType(color)){// 判断color是否为安全区
 								xx = 160-(ball_tmp->x + ball_tmp->w/2);// 计算环面中心与视觉识别安全区的向量差
 								if(abs(xx) < 12){// 判断向量差的绝对值是否小于12
 								return true;// 返回 true
@@ -466,10 +582,10 @@ void corner_angle(){
  <- 无需理会直接使用此函数即可 ->
  */
 void go_home(){
-		Turn_angle2();// 通过Turn_angle2函数转向中间偏位置
-		robot.imu_hold = true;// 陀螺仪保持
-		robot_->chassis_mode = SPEED_MODE;// 改速度模式 
-	  robot_->set_vel.linear_x = 0.55;// x速度给0.55（转完向前跑）
+	Turn_angle2();// 通过Turn_angle2函数转向中间偏位置
+	robot.imu_hold = true;// 陀螺仪保持
+	robot_->chassis_mode = SPEED_MODE;// 改速度模式 
+	robot_->set_vel.linear_x = 0.55;// x速度给0.55（转完向前跑）
     robot_->set_vel.linear_y = 0;// y速度给0
     robot_->set_vel.angular_z = 0;// z速度给0
 		while (robot_->ctrl_state == AUTO_OPERATION){ //自动模式下
@@ -480,10 +596,10 @@ void go_home(){
 		}
 		delay(10);// 延时10ms
 		}
-		Turn_angle();// 通过Turn_angle函数转向本方安全区
-		robot.imu_hold = true;//陀螺仪保持
-		robot_->chassis_mode = SPEED_MODE;// 改速度模式 
-	  robot_->set_vel.linear_x = 0.55;// x速度给0.55（转完向前跑）
+	Turn_angle();// 通过Turn_angle函数转向本方安全区
+	robot.imu_hold = true;//陀螺仪保持
+	robot_->chassis_mode = SPEED_MODE;// 改速度模式 
+	robot_->set_vel.linear_x = 0.55;// x速度给0.55（转完向前跑）
     robot_->set_vel.linear_y = 0;// y速度给0
     robot_->set_vel.angular_z = 0;// z速度给0
 		while (robot_->ctrl_state == AUTO_OPERATION){ //自动模式下
@@ -556,7 +672,7 @@ bool VisualFindBall(Robot_t *robot, uint8_t color , uint8_t pd)
         {
           ball_tmp = visual::getBall(i);// 获取视觉下发数据
 					if(pd == 0){// 判断是color颜色还是除color颜色以外（0是color颜色）
-            if (color == ball_tmp->type)// 判断寻找颜色是否相符
+            if (MatchTarget(color, ball_tmp->type))// 判断寻找目标是否相符
             {
                 dt = (millis() - ball_tmp->timestamp);// 计算现在时间与数据获取时间的插值
                 if(dt < 100)// 判断是否小与100ms（最新消息）
@@ -564,7 +680,7 @@ bool VisualFindBall(Robot_t *robot, uint8_t color , uint8_t pd)
 									// 定义两个常量为初步X,Y的向量差
 									int16_t xx;
 									int16_t yy;
-									if (color == 1 || color == 3){// 判断是否为安全区
+									if (IsSafetyZoneType(color)){// 判断是否为安全区
 										xx = 160-(ball_tmp->x + ball_tmp->w/2);//不可调
 									}
 									else{
@@ -580,8 +696,7 @@ bool VisualFindBall(Robot_t *robot, uint8_t color , uint8_t pd)
             }
 					}
 					else if(pd == 1){// 判断是color颜色还是除color颜色以外（1为除color颜色以外）
-						if(ball_tmp->type!=1 &&  ball_tmp->type!=3){// 先把安全区数据过滤
-						if (color != ball_tmp->type && color !=1 && color != 3)// 判断视觉数据是否与color不同
+						if (!IsExcludedInNonOpponentMode(color, ball_tmp->type))// 过滤对方颜色&非物料
             {
                 dt = (millis() - ball_tmp->timestamp);// 计算现在时间与数据获取时间的插值
                 if(dt < 100)// 判断是否小与100ms（最新消息）
@@ -599,7 +714,6 @@ bool VisualFindBall(Robot_t *robot, uint8_t color , uint8_t pd)
                 }
             }
 					}
-					}
         }
 
         if (find_ball != NULL)// 判断是否获取到符合条件的数据集合
@@ -608,7 +722,7 @@ bool VisualFindBall(Robot_t *robot, uint8_t color , uint8_t pd)
 						int16_t x;
 						int16_t y;
 						ft = millis();// 更新上一次找球时间
-						if(color==4 or color ==5){// 判断是否为安全区
+						if (IsSafetyZoneType(color)){// 判断是否为安全区
 							x = 160-(find_ball->x + find_ball->w/2);//不可调
 						}
 						else{
@@ -655,8 +769,11 @@ bool VisualFindBall(Robot_t *robot, uint8_t color , uint8_t pd)
  料移至本方安全区内
  */
 void PART1(){
-	if(io::getIN1()){a = 7;b = 5; c = 1;}// 红方（通过读取拨码快速切换） 
-	else{a = 5;b = 7; c = 3;}// 蓝方（通过读取拨码快速切换）
+	// a: 本方颜色物料（首个必须是本方颜色）
+	// b: 对方颜色物料（mine>=2 后开始找“非对方颜色”的任意物料）
+	// c: 本方安全区
+	if(io::getIN1()){a = LABEL_RED_BALL; b = LABEL_BLUE_BALL; c = LABEL_RED_SAFETY_ZONE;}// 红方（通过读取拨码快速切换）
+	else{a = LABEL_BLUE_BALL; b = LABEL_RED_BALL; c = LABEL_BLUE_SAFETY_ZONE;}// 蓝方（通过读取拨码快速切换）
 	while(robot_->ctrl_state == AUTO_OPERATION){
 		while (robot_->ctrl_state == AUTO_OPERATION){
 				if (notfind !=0){
@@ -733,8 +850,11 @@ void PART1(){
 	return;// 返回
 }
 void PART2(){
-	if(io::getIN1()){a = 7;b = 5; c = 1;}// 红方（通过读取拨码快速切换） 
-	else{a = 5;b = 7; c = 3;}// 蓝方（通过读取拨码快速切换）
+	// a: 本方颜色物料（首个必须是本方颜色）
+	// b: 对方颜色物料（mine>=2 后开始找“非对方颜色”的任意物料）
+	// c: 本方安全区
+	if(io::getIN1()){a = LABEL_RED_BALL; b = LABEL_BLUE_BALL; c = LABEL_RED_SAFETY_ZONE;}// 红方（通过读取拨码快速切换）
+	else{a = LABEL_BLUE_BALL; b = LABEL_RED_BALL; c = LABEL_BLUE_SAFETY_ZONE;}// 蓝方（通过读取拨码快速切换）
 	while(robot_->ctrl_state == AUTO_OPERATION){
 		while (robot_->ctrl_state == AUTO_OPERATION){
 				if (notfind !=0 ){
